@@ -36,7 +36,7 @@ function App() {
 
         <ul className="mt-2">
           {error && error.message}
-          {dataPokemon && 
+          {dataPokemon && search != "" &&
             dataPokemon
               ?.filter((item: any) => item.name.includes(search.toLowerCase()))
               .map((item) => {
