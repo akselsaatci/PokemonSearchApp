@@ -1,6 +1,8 @@
 import { SetStateAction, useCallback, useEffect, useState } from "react";
 import axios from "axios";
 import debounce from "lodash.debounce";
+import SearchInput from "./components/SearchInput";
+import DataComponent from "./components/DataComponent";
 
 function App() {
   const [dataPokemon, setPokemonData] = useState<any[]>([]);
@@ -30,35 +32,37 @@ function App() {
     var newFilter = data.filter((item: any) =>
       item.name.includes(search.toLowerCase())
     );
-    console.log(newFilter);
-    var slicedArray = newFilter.slice(0, 5);
-    slicedArray.forEach((element: any) => {
-      axios<any>({
-        method: "GET",
-        url: element.url,
-        responseType: "json",
-      })
-        .then((resp) => {
-          var ourData = {
-            name: resp.data.name,
-            id: resp.data.id,
-            sprites: resp.data.sprites.front_default,
-          };
-          setPokemonData((prevData) => [...prevData, ourData]);
-          setLoading(false);
+    if (newFilter.length === 0) {
+      setError("No Pokemon Found");
+      setLoading(false);
+    } else {
+      var slicedArray = newFilter.slice(0, 5);
+      slicedArray.forEach((element: any) => {
+        axios<any>({
+          method: "GET",
+          url: element.url,
+          responseType: "json",
         })
-        .catch((err) => {
-          setError(err);
-        });
-    });
+          .then((resp) => {
+            var ourData = {
+              name: resp.data.name,
+              id: resp.data.id,
+              sprites: resp.data.sprites.front_default,
+            };
+            setPokemonData((prevData) => [...prevData, ourData]);
+            setLoading(false);
+          })
+          .catch((err) => {
+            setError(err);
+          });
+      });
+    }
   }, [search]);
-  
+
   function handleSearch(e: { target: { value: SetStateAction<string> } }) {
     setSearch(e.target.value);
   }
-  const debouncedChangeHandler = useCallback(
-    debounce(handleSearch, 300)
-  , []);
+  const debouncedChangeHandler = useCallback(debounce(handleSearch, 300), []);
 
   return (
     <div className="container mx-auto">
@@ -66,12 +70,7 @@ function App() {
         Pokemon Search App
       </h1>
       <div className="text-center mt-8">
-        <input
-          type="text"
-          className="w-1/4 h-10 border-secondary border-2 p-2 rounded no-underline"
-          placeholder="Search"
-          onChange={debouncedChangeHandler}
-        />
+        <SearchInput debouncedChangeHandler={debouncedChangeHandler} />
 
         <ul className="mt-2">
           {error && error.message}
@@ -79,18 +78,7 @@ function App() {
           {dataPokemon &&
             search != "" &&
             dataPokemon?.map((item) => {
-              return (
-                <div className="bg-white w-1/4 h-20 my-0 mx-auto border-2 mb-1 py-1.5 rounded no-underline text-center flex">
-                  <img src={item.sprites} />
-                  <a
-                    target="_blank"
-                    className="first-letter:capitalize"
-                    href={`https://pokemon.fandom.com/wiki/` + item.name}
-                  >
-                    {item.name}
-                  </a>
-                </div>
-              );
+              return <DataComponent item={item} />;
             })}
         </ul>
       </div>
