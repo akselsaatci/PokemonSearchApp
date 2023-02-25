@@ -19,7 +19,6 @@ function App() {
     })
       .then((resp) => {
         setData(resp.data.results);
-        console.log(data);
       })
       .catch((err) => {
         setError(err);
@@ -28,7 +27,6 @@ function App() {
   useEffect(() => {
     setLoading(true);
     setPokemonData([]);
-    console.log(data);
     var newFilter = data.filter((item: any) =>
       item.name.includes(search.toLowerCase())
     );
@@ -78,7 +76,7 @@ function App() {
           {dataPokemon &&
             search != "" &&
             dataPokemon?.map((item) => {
-              return <DataComponent item={item} />;
+              return <DataComponent key={item.id} item={item} />;
             })}
         </ul>
       </div>
