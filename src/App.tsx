@@ -1,27 +1,66 @@
 import { SetStateAction, useEffect, useState } from "react";
-import "./App.css";
 import axios from "axios";
 
 function App() {
-  const [dataPokemon, setData] = useState<any[]>([]);
+  const [dataPokemon, setPokemonData] = useState<any[]>([]);
   const [search, setSearch] = useState<string>("");
-  const [error ,setError] = useState<any>("");
+  const [error, setError] = useState<any>("");
+  const [data, setData] = useState<any[]>([]);
+
   useEffect(() => {
     axios<any>({
       method: "GET",
       url: "https://pokeapi.co/api/v2/pokemon?limit=1279",
       responseType: "json",
-    }).then((resp) => {
-      setData(resp.data.results.map((item:any,index:any)=>{item.index = index;return item}));
-    }).catch((err) =>{setError(err)});
+    })
+      .then((resp) => {
+        setData(resp.data.results);
+        // setPokemonData(
+        //   resp.data.results.map((item: any, index: any) => {
+        //     item.index = index;
+        //     return item;
+        //   })
+        // );
+        console.log(data);
+      })
+      .catch((err) => {
+        setError(err);
+      });
   }, []);
+  useEffect(() => {
+    setPokemonData([]);
+    console.log(data);
+    var newFilter = data.filter((item: any) =>
+      item.name.includes(search.toLowerCase())
+    );
+    console.log(newFilter);
+    var slicedArray = newFilter.slice(0, 5);
+    slicedArray.forEach((element: any) => {
+      axios<any>({
+        method: "GET",
+        url: element.url,
+        responseType: "json",
+      })
+        .then((resp) => {
+          var ourData = {
+            name: resp.data.name,
+            id: resp.data.id,
+            sprites: resp.data.sprites.front_default,
+          };
+          setPokemonData((prevData) => [...prevData, ourData]);
+        })
+        .catch((err) => {
+          setError(err);
+        });
+    });
+  }, [search]);
 
   function handleSearch(e: { target: { value: SetStateAction<string> } }) {
     setSearch(e.target.value);
   }
 
   return (
-    <div className="container">
+    <div className="container mx-auto">
       <h1 className="font-bold text-3xl text-center text-secondary mt-10">
         Pokemon Search App
       </h1>
@@ -36,23 +75,24 @@ function App() {
 
         <ul className="mt-2">
           {error && error.message}
-          {dataPokemon && search != "" &&
-            dataPokemon
-              ?.filter((item: any) => item.name.includes(search.toLowerCase()))
-              .map((item) => {
-                return (
-                  <div className="bg-white w-1/4 h-20 my-0 mx-auto border-2 mb-1 py-1.5 rounded no-underline text-center flex">
-                    <img src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${item.index +1}.png`} />
-                      <a
-                        target="_blank"
-                        className="first-letter:capitalize"
-                        href={`https://pokemon.fandom.com/wiki/` + item.name}
-                      >
-                        {item.name}
-                      </a>
-                  </div>
-                );
-              })}
+          {dataPokemon &&
+            search != "" &&
+            dataPokemon?.map((item) => {
+              return (
+                <div className="bg-white w-1/4 h-20 my-0 mx-auto border-2 mb-1 py-1.5 rounded no-underline text-center flex">
+                  <img
+                    src={item.sprites}
+                  />
+                  <a
+                    target="_blank"
+                    className="first-letter:capitalize"
+                    href={`https://pokemon.fandom.com/wiki/` + item.name}
+                  >
+                    {item.name}
+                  </a>
+                </div>
+              );
+            })}
         </ul>
       </div>
     </div>
